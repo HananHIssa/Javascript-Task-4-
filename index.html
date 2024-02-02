@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Details</title>
+
+    <!-- Add Swiper library -->
+    <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css" />
+    <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
+</head>
+<body>
+    <div id="products"></div>
+    <div id="details" class="swiper-container"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        function fetchProducts() {
+            axios.get('https://dummyjson.com/products')
+                .then(function (response) {
+                    const products = response.data.products;
+                    displayProducts(products);
+                })
+                .catch(function (error) {
+                    console.error('Error fetching products:', error);
+                });
+        }
+
+        function displayProducts(products) {
+            const productsContainer = document.getElementById('products');
+            productsContainer.innerHTML = '';
+
+            products.forEach(product => {
+                const productElement = document.createElement('div');
+                productElement.innerHTML = `
+                    <h2>${product.title}</h2>
+                    <img src="${product.thumbnail}" alt="${product.title}" style="width:100px; height:auto; cursor: pointer;" onclick="viewProductDetails(${product.id})">
+                    <p>${product.description}</p>
+                    <button class="details-button" data-product-id="${product.id}" onclick="viewProductDetails(${product.id})">Details</button>
+                `;
+                productsContainer.appendChild(productElement);
+            });
+        }
+
+        function viewProductDetails(productId) {
+            axios.get(`https://dummyjson.com/products/${productId}`)
+                .then(function (response) {
+                    const productDetails = response.data;
+                    displayProductDetails(productDetails);
+
+                    // Change the URL to include the product ID
+                    window.location.hash = `details/${productId}`;
+                })
+                .catch(function (error) {
+                    console.error('Error fetching product details:', error);
+                });
+        }
+
+        function displayProductDetails(productDetails) {
+            const detailsContainer = document.getElementById('details');
+            detailsContainer.innerHTML = `
+                <div class="swiper-wrapper">
+                    <div class="swiper-slide">
+                        <h2>${productDetails.title}</h2>
+                        <img src="${productDetails.thumbnail}" alt="${productDetails.title}" style="width:100px; height:auto;">
+                        <p>${productDetails.description}</p>
+                        <p>Price: ${productDetails.price}</p>
+                        <p>Rating: ${productDetails.rating}</p>
+                    </div>
+                    <!-- Add more slides as needed -->
+                </div>
+            `;
+
+            // Initialize Swiper outside the function after updating the detailsContainer
+            new Swiper('.swiper-container', {
+                // Add Swiper configuration options here
+                slidesPerView: 1,
+                spaceBetween: 10,
+                navigation: {
+                    nextEl: '.swiper-button-next',
+                    prevEl: '.swiper-button-prev',
+                },
+            });
+        }
+
+        // Check for the details in the URL when the page loads
+        window.addEventListener('load', function() {
+            const hash = window.location.hash.substring(1);
+            if (hash.startsWith('details/')) {
+                const productId = hash.split('/')[1];
+                viewProductDetails(productId);
+            }
+        });
+
+        fetchProducts();
+    </script>
+</body>
+</html>
+
